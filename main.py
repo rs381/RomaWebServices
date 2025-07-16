@@ -2,12 +2,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import json, os
-import dotenv
 
-# Load environment variables
-dotenv.load_dotenv()
+# Read token from Railway environment
+TOKEN = os.getenv("DISCORD_TOKEN")
 
-TOKEN = os.getenv("TOKEN")
 BAN_FILE = "bans.json"
 
 if os.path.exists(BAN_FILE):
