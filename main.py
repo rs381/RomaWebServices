@@ -1,24 +1,29 @@
+#test save
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 import json, os
+from flask import Flask
+import threading
 
-# Read token from Railway environment
+# Read token from environment (Railway or Render)
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 BAN_FILE = "bans.json"
 
 if os.path.exists(BAN_FILE):
-    if os.path.getsize(BAN_FILE) > 0:  # Check if the file is not empty
+    if os.path.getsize(BAN_FILE) > 0:
         with open(BAN_FILE, "r") as f:
             banned_users = json.load(f)
     else:
-        banned_users = []  # Initialize as an empty list if the file is empty
+        banned_users = []
 else:
     banned_users = []
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True  # Make sure this is enabled if you rely on message content
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
@@ -82,4 +87,19 @@ async def globalunban(interaction, user: discord.User):
 
     await interaction.response.send_message(f"{user} unbanned in {count} servers.")
 
+# --- Flask server to keep Render happy ---
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot is alive!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+# Run Flask server in background thread
+threading.Thread(target=run_web).start()
+
+# Run the bot
 bot.run(TOKEN)
