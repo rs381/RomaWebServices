@@ -63,29 +63,30 @@ async def globalban(interaction, user: discord.User, reason: str = "No reason"):
 
     await interaction.response.send_message(f"{user} banned in {count} servers.")
 
-@tree.command(name="globalunban", description="Globally unban a user.")
-@app_commands.describe(user="User to unban")
-async def globalunban(interaction, user: discord.User):
+@tree.command(name="globalunban", description="Globally unban a user by ID.")
+@app_commands.describe(user_id="User ID to unban")
+async def globalunban(interaction: discord.Interaction, user_id: str):
     if not is_moderator(interaction):
         await interaction.response.send_message("You need the 'Moderator' role.", ephemeral=True)
         return
 
-    if str(user.id) not in banned_users:
-        await interaction.response.send_message("User not globally banned.", ephemeral=True)
+    if user_id not in banned_users:
+        await interaction.response.send_message("User is not globally banned.", ephemeral=True)
         return
 
-    banned_users.remove(str(user.id))
+    banned_users.remove(user_id)
     save_bans()
 
     count = 0
     for guild in bot.guilds:
         try:
-            await guild.unban(user)
+            await guild.unban(discord.Object(id=int(user_id)))
             count += 1
         except:
             pass
 
-    await interaction.response.send_message(f"{user} unbanned in {count} servers.")
+    await interaction.response.send_message(f"User ID {user_id} unbanned in {count} servers.")
+
 
 # --- Flask server to keep Render happy ---
 app = Flask(__name__)
