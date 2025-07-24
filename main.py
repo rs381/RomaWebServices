@@ -39,6 +39,16 @@ async def on_ready():
     await tree.sync()
     print(f"Bot is ready. Logged in as {bot.user}")
 
+    @bot.event
+async def on_member_unban(guild, user):
+    if str(user.id) in banned_users:
+        try:
+            await guild.ban(user, reason="Re-banned: Global ban still in effect.")
+            print(f"Re-banned {user} in {guild.name} after manual unban.")
+        except Exception as e:
+            print(f"Failed to re-ban {user} in {guild.name}: {e}")
+
+
 @tree.command(name="globalban", description="Globally ban a user.")
 @app_commands.describe(user="User to ban", reason="Why?")
 async def globalban(interaction, user: discord.User, reason: str = "No reason"):
