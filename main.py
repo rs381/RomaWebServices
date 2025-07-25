@@ -39,7 +39,7 @@ async def on_ready():
     await tree.sync()
     print(f"Bot is ready. Logged in as {bot.user}")
 
-    @bot.event
+@bot.event
 async def on_member_unban(guild, user):
     if str(user.id) in banned_users:
         try:
