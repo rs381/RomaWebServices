@@ -11,6 +11,11 @@ import asyncio
 from collections import defaultdict
 from discord import Embed
 
+@bot.command()
+async def lastdelete(ctx):
+    async for entry in ctx.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+        await ctx.send(f"Last channel deleted by: {entry.user}")
+
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 
@@ -119,8 +124,21 @@ else:
     banned_users = []
 
 intents = discord.Intents.default()
+intents.guilds = True
+intents.guild_messages = True
+intents.guild_reactions = True
 intents.members = True
-intents.message_content = True  # Make sure this is enabled if you rely on message content
+intents.message_content = True
+intents.guilds = True
+intents.guild_bans = True
+intents.guild_messages = True
+intents.guild_scheduled_events = True
+intents.guild_message_reactions = True
+intents.guild_presences = True
+intents.guild_typing = True
+intents.integrations = True
+intents.webhooks = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
