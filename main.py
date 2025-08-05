@@ -6,6 +6,95 @@ from discord.ext import commands
 import json, os
 from flask import Flask
 import threading
+import datetime
+import asyncio
+from collections import defaultdict
+from discord import Embed
+
+# Abuse tracking system
+abuse_events = defaultdict(list)
+ABUSE_THRESHOLD = 5
+TIME_WINDOW = 60  # seconds
+SENIOR_MOD_IDS = [219920365227474944, 996087982798950410, 345626453844313099468989012]  # Replace with actual IDs
+
+def log_abuse_event(user_id: int, event_type: str):
+    now = asyncio.get_event_loop().time()
+    abuse_events[user_id] = [t for t in abuse_events[user_id] if now - t < TIME_WINDOW]
+    abuse_events[user_id].append(now)
+    return len(abuse_events[user_id]) >= ABUSE_THRESHOLD
+
+async def handle_abuse(member: discord.Member):
+    # Remove roles
+    roles = [role for role in member.roles if role.name != "@everyone"]
+    try:
+        await member.edit(roles=[])
+    except Exception as e:
+        print(f"Failed to remove roles: {e}")
+
+    # Notify senior mods
+    embed_mod = Embed(
+        title="⚠️ Possible Admin Abuse Detected",
+        description=f"{member.mention} has triggered 5 or more major actions in under 60 seconds.",
+        color=0xFF5555
+    )
+    for mod_id in SENIOR_MOD_IDS:
+        mod = member.guild.get_member(mod_id)
+        if mod:
+            try:
+                await mod.send(embed=embed_mod)
+            except:
+                pass
+
+    # DM the accused
+    embed_accused = Embed(
+        title="🚨 You May Have Been Flagged",
+        description="You triggered multiple high-level actions in a short time and had your roles removed.\n\n"
+                    "Please contact `bonesdominion`, `WinterTale`, or `LordRitos` to review the situation and potentially restore your roles.",
+        color=0x990000
+    )
+    try:
+        await member.send(embed=embed_accused)
+    except:
+        pass
+
+# Watch major actions
+@bot.event
+async def on_member_ban(guild, user):
+    member = guild.get_member(user.id)
+    if member and log_abuse_event(member.id, "ban"):
+        await handle_abuse(member)
+
+@bot.event
+async def on_member_remove(member):  # kick detection
+    if log_abuse_event(member.id, "kick"):
+        await handle_abuse(member)
+
+@bot.event
+async def on_guild_channel_delete(channel):
+    async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+        if log_abuse_event(entry.user.id, "channel_delete"):
+            member = channel.guild.get_member(entry.user.id)
+            if member:
+                await handle_abuse(member)
+
+@bot.event
+async def on_guild_channel_update(before, after):
+    if before.name != after.name:
+        async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_update):
+            if log_abuse_event(entry.user.id, "rename_channel"):
+                member = after.guild.get_member(entry.user.id)
+                if member:
+                    await handle_abuse(member)
+
+@bot.event
+async def on_guild_role_update(before, after):
+    if not before.hoist and after.hoist:
+        async for entry in after.guild.audit_logs(limit=1, action=discord.AuditLogAction.role_update):
+            if log_abuse_event(entry.user.id, "hoist_role"):
+                member = after.guild.get_member(entry.user.id)
+                if member:
+                    await handle_abuse(member)
+
 
 # Read token from environment (Railway or Render)
 TOKEN = os.getenv("DISCORD_TOKEN")
