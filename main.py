@@ -75,11 +75,15 @@ async def on_member_remove(member):  # kick detection
 
 @bot.event
 async def on_guild_channel_delete(channel):
+    print(f"Channel deleted: {channel.name} in guild {channel.guild.name}")
     async for entry in channel.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
+        print(f"Audit log entry found: {entry.user} deleted a channel")
         if log_abuse_event(entry.user.id, "channel_delete"):
+            print(f"Abuse detected for user {entry.user}")
             member = channel.guild.get_member(entry.user.id)
             if member:
                 await handle_abuse(member)
+
 
 @bot.event
 async def on_guild_channel_update(before, after):
