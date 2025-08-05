@@ -11,6 +11,10 @@ import asyncio
 from collections import defaultdict
 from discord import Embed
 
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+
+
+
 # Abuse tracking system
 abuse_events = defaultdict(list)
 ABUSE_THRESHOLD = 5
