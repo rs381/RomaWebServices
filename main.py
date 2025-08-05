@@ -11,14 +11,14 @@ import asyncio
 from collections import defaultdict
 from discord import Embed
 
+
+
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+
 @bot.command()
 async def lastdelete(ctx):
     async for entry in ctx.guild.audit_logs(limit=1, action=discord.AuditLogAction.channel_delete):
         await ctx.send(f"Last channel deleted by: {entry.user}")
-
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-
-
 
 # Abuse tracking system
 abuse_events = defaultdict(list)
