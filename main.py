@@ -126,18 +126,7 @@ else:
 intents = discord.Intents.default()
 intents.guilds = True
 intents.guild_messages = True
-intents.guild_reactions = True
 intents.members = True
-intents.message_content = True
-intents.guilds = True
-intents.bans = True
-intents.guild_messages = True
-intents.guild_scheduled_events = True
-intents.guild_message_reactions = True
-intents.guild_presences = True
-intents.guild_typing = True
-intents.integrations = True
-intents.webhooks = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
