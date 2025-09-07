@@ -1,7 +1,7 @@
 from flask import Flask
-import threading
+from threading import Thread
 
-app = Flask('')
+app = Flask(__name__)
 
 @app.route('/')
 def home():
@@ -11,5 +11,6 @@ def run():
     app.run(host="0.0.0.0", port=10000)
 
 def keep_alive():
-    t = threading.Thread(target=run)
-    t.start()
+    server = Thread(target=run)
+    server.daemon = True
+    server.start()
