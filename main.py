@@ -2,6 +2,9 @@ import os
 import discord
 from discord.ext import commands
 import datetime
+from keep_alive import keep_alive
+
+keep_alive()
 
 # --- BOT SETUP ---
 intents = discord.Intents.default()
